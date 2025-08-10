@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>860 Sports — Admin (Centros y Tickets)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    :root{--bg:#0f0f0f;--panel:#131313;--panel2:#171717;--border:#2a2a2a;--text:#f5f5f5;--muted:#b3b3b3;--accent:#d71920;}
+    *{box-sizing:border-box}
+    body{font-family:Arial,Helvetica,sans-serif;margin:0;background:var(--bg);color:var(--text)}
+    header{padding:12px 16px;background:var(--panel2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
+    a{color:#9bd;text-decoration:none}
+    .wrap{max-width:1200px;margin:0 auto;padding:16px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+    label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)}
+    input,select{background:#0e0e0e;border:1px solid var(--border);color:#fff;border-radius:8px;padding:8px}
+    button{background:#2a2a2a;border:1px solid #3a3a3a;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer}
+    button:hover{filter:brightness(1.08)}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{border:1px solid var(--border);padding:8px;text-align:center}
+    thead{background:var(--accent)}
+    .muted{color:var(--muted)}
+    .tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+    .tab{background:#2a2a2a;border:1px solid #3a3a3a;color:#fff;border-radius:10px;padding:8px 12px;cursor:pointer}
+    .tab.active{background:var(--accent)}
+  </style>
+</head>
+<body>
+<header>
+  <div><a href="index.html">← Pública</a></div>
+  <b id="headTitle">Admin — 860 Sports</b>
+  <div><button id="btnLogout">Salir</button></div>
+</header>
+
+<div class="wrap">
+  <section id="login" class="card">
+    <h2>Iniciar sesión</h2>
+    <div class="row">
+      <label>Usuario<input id="user"/></label>
+      <label>Contraseña<input id="pass" type="password"/></label>
+      <button id="btnLogin">Entrar</button>
+    </div>
+    <p class="muted">Demo: agent1/1234 (Centro A), agent2/5678 (Centro B)</p>
+  </section>
+
+  <section id="app" class="hidden">
+    <div class="tabs">
+      <button class="tab active" data-t="tickets">🎟️ Tickets</button>
+      <button class="tab" data-t="ventas">💵 Ventas</button>
+      <button class="tab" data-t="monitoreo">📊 Monitoreo</button>
+      <button class="tab" data-t="cuadre">🧮 Cuadre</button>
+      <button class="tab" data-t="export">⬇️ Exportar</button>
+    </div>
+
+    <section id="tickets" class="card">
+      <h2>Crear Ticket</h2>
+      <div class="row">
+        <label>Código<input id="code" maxlength="3" placeholder="100-499"/></label>
+        <label>Tipo<select id="betType"><option>ML</option><option>Over</option><option>Under</option></select></label>
+        <label>Puntos<input id="points" placeholder="8.5"/></label>
+        <label>Monto ($)<input id="stake" type="number" step="1" placeholder="50"/></label>
+      </div>
+      <div class="row">
+        <label>Cliente<input id="clientName" placeholder="Juan Pérez"/></label>
+        <label>Teléfono<input id="clientPhone" placeholder="(000) 000-0000"/></label>
+        <button id="btnAdd">Agregar</button>
+        <button id="btnSettle">Auto-liquidar</button>
+      </div>
+
+      <table>
+        <thead><tr><th>ID</th><th>Fecha</th><th>Deporte</th><th>Equipo</th><th>Tipo</th><th>Puntos</th><th>Cuota</th><th>Riesgo</th><th>Pago</th><th>Estado</th><th>Acción</th></tr></thead>
+        <tbody id="tbodyTickets"></tbody>
+      </table>
+    </section>
+
+    <section id="ventas" class="card hidden">
+      <h2>Ventas</h2>
+      <div id="ventasSummary" class="row"></div>
+      <table><thead><tr><th>Fecha</th><th>Tickets</th><th>Riesgo</th><th>Pago Pot.</th><th>Ganancia</th></tr></thead><tbody id="tbodyVentas"></tbody></table>
+    </section>
+
+    <section id="monitoreo" class="card hidden">
+      <h2>Monitoreo</h2>
+      <div class="row">
+        <div>Total: <b id="monTotal"></b></div>
+        <div>Abiertos: <b id="monOpen"></b></div>
+        <div>Ganados: <b id="monWon"></b></div>
+        <div>Perdidos: <b id="monLost"></b></div>
+        <div>Void: <b id="monVoid"></b></div>
+      </div>
+    </section>
+
+    <section id="cuadre" class="card hidden">
+      <h2>Cuadre</h2>
+      <div class="row">
+        <label>Desde<input id="fromDate" type="date"/></label>
+        <label>Hasta<input id="toDate" type="date"/></label>
+        <button id="btnCuadre">Calcular</button>
+      </div>
+      <table><thead><tr><th>Fecha</th><th>Tickets</th><th>Riesgo</th><th>Pago Pot.</th><th>Ganancia</th></tr></thead><tbody id="tbodyCuadre"></tbody></table>
+    </section>
+
+    <section id="export" class="card hidden">
+      <h2>Exportar</h2>
+      <div class="row">
+        <button id="btnExcel">Descargar Excel</button>
+        <button id="btnPDF">Descargar PDF</button>
+      </div>
+    </section>
+  </section>
+</div>
+
+<script>
+const api = {
+  token: localStorage.getItem('token')||'',
+  async login(username,password){
+    const r = await fetch('/api/auth/login',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username,password})});
+    if (!r.ok) throw new Error('Login inválido');
+    const data = await r.json(); this.token = data.token; localStorage.setItem('token', data.token);
+    localStorage.setItem('me', JSON.stringify(data.user)); return data.user;
+  },
+  async me(){ const m = localStorage.getItem('me'); return m?JSON.parse(m):null; },
+  async listTickets(){ const r = await fetch('/api/tickets',{ headers:{ Authorization:'Bearer '+this.token }}); return r.json(); },
+  async addTicket(payload){ const r = await fetch('/api/tickets',{ method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer '+this.token }, body: JSON.stringify(payload)}); return r.json(); },
+  async actTicket(id, action){ const r = await fetch('/api/tickets/'+id,{ method:'PATCH', headers:{ 'Content-Type':'application/json', Authorization:'Bearer '+this.token }, body: JSON.stringify({action})}); return r.json(); },
+  async autoSettle(){ const r = await fetch('/api/tickets/auto-settle',{ method:'POST', headers:{ Authorization:'Bearer '+this.token }}); return r.json(); },
+  async reportDaily(from,to){ const q = new URLSearchParams(); if(from) q.append('from',from); if(to) q.append('to',to); const r = await fetch('/api/reports/daily?'+q.toString(),{ headers:{ Authorization:'Bearer '+this.token }}); return r.json(); },
+  excel(){ location.href = '/api/reports/excel';},
+  pdf(){ location.href = '/api/reports/pdf';}
+};
+
+const loginSec = document.getElementById('login');
+const appSec = document.getElementById('app');
+const btnLogin = document.getElementById('btnLogin');
+const btnLogout = document.getElementById('btnLogout');
+const user = document.getElementById('user');
+const pass = document.getElementById('pass');
+const headTitle = document.getElementById('headTitle');
+
+const code = document.getElementById('code');
+const betType = document.getElementById('betType');
+const points = document.getElementById('points');
+const stake = document.getElementById('stake');
+const clientName = document.getElementById('clientName');
+const clientPhone = document.getElementById('clientPhone');
+const btnAdd = document.getElementById('btnAdd');
+const btnSettle = document.getElementById('btnSettle');
+const tbodyTickets = document.getElementById('tbodyTickets');
+
+const tabs = document.querySelectorAll('.tab');
+tabs.forEach(t=> t.addEventListener('click', ()=>{ switchTab(t.dataset.t); }));
+
+btnLogin.addEventListener('click', async ()=>{
+  try{
+    const me = await api.login(user.value, pass.value);
+    headTitle.textContent = `Admin — ${me.center}`;
+    loginSec.classList.add('hidden');
+    appSec.classList.remove('hidden');
+    await refreshTickets();
+  }catch(e){ alert(e.message); }
+});
+
+btnLogout.addEventListener('click', ()=>{
+  localStorage.removeItem('token'); localStorage.removeItem('me'); location.reload();
+});
+
+btnAdd.addEventListener('click', async ()=>{
+  try{
+    const payload = { code: parseInt(code.value,10), bet: betType.value, pts: points.value.trim(), stake: parseFloat(stake.value), clientName: clientName.value.trim(), clientPhone: clientPhone.value.trim() };
+    const r = await api.addTicket(payload);
+    if (r.error) throw new Error(r.error);
+    code.value=''; points.value=''; stake.value='';
+    await refreshTickets();
+  }catch(e){ alert(e.message); }
+});
+
+btnSettle.addEventListener('click', async ()=>{
+  const r = await api.autoSettle();
+  alert('Auto-liquidado: ' + (r.settled||0) + ' ticket(s)');
+  await refreshTickets();
+});
+
+async function refreshTickets(){
+  const data = await api.listTickets();
+  const list = data.tickets||[];
+  tbodyTickets.innerHTML='';
+  list.forEach(t=>{
+    const payout = americanPayout(t.stake, t.price);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>#${t.id}</td>
+      <td>${new Date(t.created_at).toLocaleString()}</td>
+      <td>${t.sport}</td>
+      <td>${t.team}</td>
+      <td>${t.bet}</td>
+      <td>${t.pts || '—'}</td>
+      <td>${fmtPrice(t.price)}</td>
+      <td>$${t.stake.toFixed(2)}</td>
+      <td>$${payout.toFixed(2)}</td>
+      <td>${t.status}</td>
+      <td>
+        ${t.status==='open' ? `
+          <button data-id="${t.id}" data-a="win">Ganar</button>
+          <button data-id="${t.id}" data-a="lose">Perder</button>
+          <button data-id="${t.id}" data-a="void">Void</button>` : '<span class="muted">—</span>'}
+      </td>`;
+    tbodyTickets.appendChild(tr);
+  });
+  tbodyTickets.querySelectorAll('button').forEach(b=> b.addEventListener('click', async (e)=>{
+    const id = e.target.dataset.id, a = e.target.dataset.a;
+    const r = await api.actTicket(id, a);
+    if (r.error) return alert(r.error);
+    await refreshTickets();
+  }));
+}
+
+function americanPayout(stake, price){ if (price>0) return stake + stake*(price/100); if (price<0) return stake + stake*(100/Math.abs(price)); return stake; }
+function fmtPrice(p){ return (p||p===0) ? (p>0?('+'+p):p) : '—'; }
+
+// Tabs
+function switchTab(id){
+  tabs.forEach(x=> x.classList.toggle('active', x.dataset.t===id));
+  document.querySelectorAll('section.card').forEach(s => s.classList.toggle('hidden', s.id!==id && s.parentElement.id!=='login'));
+  if (id==='ventas') renderVentas();
+  if (id==='monitoreo') renderMonitoreo();
+}
+
+// Ventas
+async function renderVentas(){
+  const res = await api.reportDaily();
+  const tb = document.getElementById('tbodyVentas'); const sm = document.getElementById('ventasSummary');
+  tb.innerHTML=''; sm.innerHTML='';
+  let sumRisk=0,sumPayout=0,sumProfit=0,sumCount=0;
+  (res.rows||[]).forEach(r=>{
+    sumCount += r.tickets; sumRisk += r.risk; sumPayout += r.payout; sumProfit += r.profit;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.day}</td><td>${r.tickets}</td><td>$${r.risk.toFixed(2)}</td><td>$${r.payout.toFixed(2)}</td><td>$${r.profit.toFixed(2)}</td>`;
+    tb.appendChild(tr);
+  });
+  sm.innerHTML = `
+    <div>Total días: <b>${(res.rows||[]).length}</b></div>
+    <div>Total tickets: <b>${sumCount}</b></div>
+    <div>Manejo total: <b>$${sumRisk.toFixed(2)}</b></div>
+    <div>Pago potencial: <b>$${sumPayout.toFixed(2)}</b></div>
+    <div>Ganancia: <b>$${sumProfit.toFixed(2)}</b></div>
+  `;
+}
+
+// Monitoreo
+async function renderMonitoreo(){
+  const data = await api.listTickets();
+  const list = data.tickets||[];
+  document.getElementById('monTotal').textContent = list.length;
+  document.getElementById('monOpen').textContent = list.filter(t=>t.status==='open').length;
+  document.getElementById('monWon').textContent = list.filter(t=>t.status==='won').length;
+  document.getElementById('monLost').textContent = list.filter(t=>t.status==='lost').length;
+  document.getElementById('monVoid').textContent = list.filter(t=>t.status==='void').length;
+}
+
+// Cuadre (rango)
+document.getElementById('btnCuadre').addEventListener('click', async ()=>{
+  const from = document.getElementById('fromDate').value;
+  const to = document.getElementById('toDate').value;
+  const res = await api.reportDaily(from, to);
+  const tb = document.getElementById('tbodyCuadre'); tb.innerHTML='';
+  (res.rows||[]).forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.day}</td><td>${r.tickets}</td><td>$${r.risk.toFixed(2)}</td><td>$${r.payout.toFixed(2)}</td><td>$${r.profit.toFixed(2)}</td>`;
+    tb.appendChild(tr);
+  });
+});
+
+document.getElementById('btnExcel').addEventListener('click', ()=> api.excel());
+document.getElementById('btnPDF').addEventListener('click', ()=> api.pdf());
+
+</script>
+</body>
+</html>
